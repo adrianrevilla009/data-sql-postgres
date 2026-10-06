@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16.4
+    command: ["postgres", "-c", "max_connections=30"]
+    environment:
+      POSTGRES_PASSWORD: lab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 2s
+      retries: 30
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.23.1-p2
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: lab
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "5"
+      MAX_CLIENT_CONN: "200"
+    ports: ["16432:5432"]

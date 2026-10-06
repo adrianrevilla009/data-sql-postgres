@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-orders
+      author: lab
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: customer_id, type: int, constraints: { nullable: false } }
+              - column: { name: status, type: text, defaultValue: NEW, constraints: { nullable: false } }
+              - column: { name: total, type: "numeric(10,2)", constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: orders }
+  - changeSet:
+      id: 2-add-created-at
+      author: lab
+      changes:
+        - addColumn:
+            tableName: orders
+            columns:
+              - column: { name: created_at, type: timestamptz, defaultValueComputed: now(), constraints: { nullable: false } }
+        - createIndex:
+            tableName: orders
+            indexName: orders_customer_idx
+            columns:
+              - column: { name: customer_id }
+      rollback:
+        - dropIndex: { tableName: orders, indexName: orders_customer_idx }
+        - dropColumn: { tableName: orders, columnName: created_at }

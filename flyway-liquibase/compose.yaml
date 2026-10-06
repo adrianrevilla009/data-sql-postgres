@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16.4
+    environment:
+      POSTGRES_PASSWORD: lab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 2s
+      retries: 30
+  flyway:
+    image: flyway/flyway:10.17.3
+    profiles: ["flyway"]
+    depends_on: { db: { condition: service_healthy } }
+    command: -url=jdbc:postgresql://db:5432/postgres -user=postgres -password=lab -connectRetries=5 migrate
+    volumes: ["./flyway:/flyway/sql:ro"]
+  liquibase:
+    image: liquibase/liquibase:4.29.2
+    profiles: ["liquibase"]
+    depends_on: { db: { condition: service_healthy } }
+    command: --url=jdbc:postgresql://db:5432/postgres --username=postgres --password=lab --changeLogFile=changelog.yaml update
+    volumes: ["./liquibase:/liquibase/changelog:ro"]
+    working_dir: /liquibase/changelog
